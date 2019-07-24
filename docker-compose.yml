@@ -1,103 +1,44 @@
-# quantumobject/docker-zoneminder:1.31.44 build from https://github.com/marcelo-ochoa/docker-zoneminder
-# docker build -t "quantumobject/docker-zoneminder:1.31.44" -f Dockerfile .
-# dockercloud/haproxy:1.6.7.1 build from https://github.com/marcelo-ochoa/dockercloud-haproxy
-version: '3.2'
-
+# https://github.com/QuantumObject/docker-zoneminder/issues/49#issuecomment-436931588
+version: "3.7"
 services:
+
   db:
-    image: mysql/mysql-server:5.7
-    networks:
-      - net
-    volumes:
-      - /home/data/zm/mysql:/var/lib/mysql
-      - $PWD/conf/mysql:/etc/mysql:ro
+    image: "mysql/mysql-server:5.7"
     environment:
-     - TZ=America/Argentina/Buenos_Aires
-     - MYSQL_USER=zmuser
-     - MYSQL_PASSWORD=zmpass
-     - MYSQL_DATABASE=zm
-     - MYSQL_ROOT_PASSWORD=mysqlpsswd
-     - MYSQL_ROOT_HOST=%
-    deploy:
-      mode: replicated
-      replicas: 1
-      restart_policy:
-       condition: on-failure
-       max_attempts: 3
-       window: 120s
-  web:
-    image: quantumobject/docker-zoneminder:1.31.44
+      - TZ=America/Chicago
+      - MYSQL_USER=zmuser
+      - MYSQL_PASSWORD=zmpass
+      - MYSQL_DATABASE=zm
+      - MYSQL_ROOT_PASSWORD=mysqlpsswd
+      - MYSQL_ROOT_HOST=%
+    volumes:
+      - "./mysql/data:/var/lib/mysql"
+      - "./mysql/cache:/etc/mysql:ro"
     networks:
-      - net
+      - cctv
+
+  zm:
+    image: quantumobject/docker-zoneminder
+    build:
+      context: .
+      shm_size: '2gb'
+    depends_on:
+      - db
+    environment:
+      - TZ=America/Chicago
+      - ZM_DB_HOST=db
+      - SERVICE_PORTS="8081"
     volumes:
       - /var/empty
-      - /home/data/zm/backups:/var/backups
-      - /home/data/zm/zoneminder:/var/cache/zoneminder
+      - "./backups:/var/backups"
+      - "./cache:/var/cache/zoneminder"
       - type: tmpfs
         target: /dev/shm
-    environment:
-     - TZ=America/Argentina/Buenos_Aires
-     - VIRTUAL_HOST=zm.localhost, stream0.localhost
-     - SERVICE_PORTS="80"
-     - ZM_SERVER_HOST=node.0
-     - ZM_DB_HOST=db
-    deploy:
-      mode: replicated
-      replicas: 0
-      restart_policy:
-        condition: on-failure
-        max_attempts: 3
-        window: 120s
-    depends_on:
-      - db 
-  stream:
-    image: quantumobject/docker-zoneminder:1.31.44
     networks:
-      - net
-    volumes:
-      - /var/empty
-      - /home/data/zm/backups:/var/backups
-      - /home/data/zm/zoneminder:/var/cache/zoneminder
-      - type: tmpfs
-        target: /dev/shm
-    environment:
-     - TZ=America/Argentina/Buenos_Aires
-     - VIRTUAL_HOST=stream{{.Task.Slot}}.localhost
-     - SERVICE_PORTS="80"
-     - ZM_SERVER_HOST=node.{{.Task.Slot}}
-     - ZM_DB_HOST=db
-    deploy:
-      mode: replicated
-      replicas: 0
-      restart_policy:
-        condition: on-failure
-        max_attempts: 3
-        window: 120s
-    depends_on:
-      - web
-  lb:
-    image: dockercloud/haproxy:1.6.7.1
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - cctv
     ports:
-      - target: 80
-        published: 80
-        protocol: tcp
-    networks:
-      - net
-    environment:
-     - TZ=America/Argentina/Buenos_Aires
-    deploy:
-      mode: replicated
-      replicas: 1
-      placement:
-        constraints: [node.role == manager]
-      restart_policy:
-        condition: on-failure
-        max_attempts: 3
-        window: 120s
-    depends_on:
-      - web
+      - "8081:80"
+
 networks:
-  net:
-    driver: overlay
+  cctv:
+    driver: bridge
