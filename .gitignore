@@ -1,0 +1,5 @@
+conf/*
+cache/*
+zoneminder/*
+mysql/*
+!mysql/my.cnf
