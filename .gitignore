@@ -5,7 +5,9 @@ mysql/*
 !mysql/my.cnf
 
 node_modules
+.idea
 
+aws/index.js
 *.env
 **/cdk.context.json
 cdk.out
