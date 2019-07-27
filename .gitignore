@@ -3,3 +3,9 @@ cache/*
 zoneminder/*
 mysql/*
 !mysql/my.cnf
+
+node_modules
+
+*.env
+**/cdk.context.json
+cdk.out
