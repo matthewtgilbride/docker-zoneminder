@@ -43,14 +43,14 @@ if [ -f /var/cache/zoneminder/configured ]; then
           sleep 3
           echo "waiting for mysql ..."
         done
-        rm -rf /var/run/zm/* 
+        rm -rf /var/run/zm/*
 	/sbin/zm.sh&
-else 
+else
         #check if Directory inside of /var/cache/zoneminder are present.
         if [ ! -d /var/cache/zoneminder/events ]; then
            mkdir -p /var/cache/zoneminder/{events,images,temp,cache}
         fi
-        
+
         chown -R root:www-data /var/cache/zoneminder /etc/zm/zm.conf
         chmod -R 770 /var/cache/zoneminder /etc/zm/zm.conf
         while !(mysql_ready)
@@ -58,13 +58,14 @@ else
           sleep 3
           echo "waiting for mysql ..."
         done
-        echo "SET GLOBAL sql_mode = 'NO_ENGINE_SUBSTITUTION';" | mysql -u $MYSQL_ROOT -p$MYSQL_ROOT_PASSWORD -h $ZM_DB_HOST
-        mysql -u $MYSQL_ROOT -p$MYSQL_ROOT_PASSWORD -h $ZM_DB_HOST < /usr/share/zoneminder/db/zm_create.sql   
+        # comment out because we need SUPER permission maybe? NO_ENGINE_SUBSTITUTION is already on in RDS
+        # echo "SET GLOBAL sql_mode = 'NO_ENGINE_SUBSTITUTION';" | mysql -u $MYSQL_ROOT -p$MYSQL_ROOT_PASSWORD -h $ZM_DB_HOST
+        mysql -u $MYSQL_ROOT -p$MYSQL_ROOT_PASSWORD -h $ZM_DB_HOST < /usr/share/zoneminder/db/zm_create.sql
         date > /var/cache/zoneminder/dbcreated
-        #needed to fix problem with ubuntu ... and cron 
+        #needed to fix problem with ubuntu ... and cron
         update-locale
         date > /var/cache/zoneminder/configured
         zmupdate.pl
-        rm -rf /var/run/zm/* 
+        rm -rf /var/run/zm/*
         /sbin/zm.sh&
 fi

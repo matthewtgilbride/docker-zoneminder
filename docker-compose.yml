@@ -9,8 +9,8 @@ services:
       - MYSQL_USER=zmuser
       - MYSQL_PASSWORD=zmpass
       - MYSQL_DATABASE=zm
-      - MYSQL_ROOT_PASSWORD=mysqlpsswd
-      - MYSQL_ROOT_HOST=%
+      - MYSQL_ROOT_PASSWORD=testmysql
+      - MYSQL_ROOT_HOST=
     volumes:
       - "./mysql/data:/var/lib/mysql"
       - "./mysql/cache:/etc/mysql:ro"
@@ -22,11 +22,11 @@ services:
     build:
       context: .
       shm_size: '2gb'
-    depends_on:
-      - db
     environment:
       - TZ=America/Chicago
-      - ZM_DB_HOST=db
+      - ZM_DB_HOST=testmysql.cpoalswsbhdf.us-east-1.rds.amazonaws.com
+      - MYSQL_ROOT=testmysql
+      - MYSQL_ROOT_PASSWORD=testmysql
       - SERVICE_PORTS="8081"
     volumes:
       - /var/empty
